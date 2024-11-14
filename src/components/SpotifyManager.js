@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSocket } from '../services/socketService';
 
-const TrackFinder = () => {
+const TrackFinder = ({queue}) => {
     const [trackName, setTrackName] = useState('');
     const [tracks, setTracks] = useState([]);
     const [error, setError] = useState('');
@@ -34,18 +34,25 @@ const TrackFinder = () => {
 
     const handleSearch = () => {
         if (socket) {
+            console.log(trackName)
             socket.emit('findTrack', { shopId, trackName });
         }
     };
 
+    const handleClaim = () => {
+        if (socket) {
+            socket.emit('claimPlayer', { shopId });
+        }
+    };
     const handleSpotifyLogin = () => {
         const nextUrl = `http://localhost:5000/login/${shopId}`;
         window.location.href = nextUrl;
     };
 
-    const addToQueue = (trackId) => {
+    const addToQueue = (track) => {
         if (socket) {
-            socket.emit('selectTrack', { shopId, trackId });
+            console.log(track)
+            socket.emit('selectTrack', { shopId, track });
         }
     };
 
@@ -60,16 +67,29 @@ const TrackFinder = () => {
                 placeholder="Enter track name" 
             />
             <button onClick={handleSearch}>Search</button>
+            <button onClick={handleClaim}>set as player</button>
 
             {error && <p>{error}</p>}
+            {trackName == '' ?
             <ul>
-                {tracks.map(track => (
+                {queue && queue.map(track => (
                     <li key={track.id}>
-                        {track.name} - {track.artists.map(artist => artist.name).join(', ')}
-                        <button onClick={() => addToQueue(track.id)}>Add to Queue</button>
+                        <img src={track.thumbnail}/>
+                        {track.title} - {track.artist}
+                        <button onClick={() => addToQueue(track)}>Add to Queue</button>
+                    </li>
+                ))}
+            </ul>:
+            <ul>
+                {tracks && tracks.map(track => (
+                    <li key={track.id}>
+                        <img src={track.thumbnail}/>
+                        {track.title} - {track.artist}
+                        <button onClick={() => addToQueue(track)}>Add to Queue</button>
                     </li>
                 ))}
             </ul>
+}
         </div>
     );
 };
